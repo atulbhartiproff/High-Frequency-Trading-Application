@@ -85,6 +85,27 @@ double calcMovingAvg(const vector<MarketData>& data, const string& symbol, int p
     return sum / periods;
 }
 
+int genTradingSignal(const vector<MarketData>& data, const string& symbol, int shortP, int longP)
+{
+    double shortMA=calcMovingAvg(data,symbol,shortP);
+    double longMA=calcMovingAvg(data,symbol,longP);
+
+    //Lets use MOVING AVERAGE CROSSOVER strategy for now=> 
+    //short>long= Upward trend => BUY BUY BUY
+    //short<long= Downward trend => SELL SELL SELL
+    //short=long= Nothing, just wait => HOOOOOLD
+
+    if (shortMA > longMA) {
+        return 1; // Buy signal
+    } else if (shortMA < longMA) {
+        return -1; // Sell signal
+    } else {
+        return 0; // Hold
+    }
+}
+
+
+
 
 int main() {
     cout<<"Well Market Data hmmmm..."<<endl;
@@ -113,20 +134,26 @@ int main() {
 
             data.push_back(md);
         }
-        
-        cout << "=== AAPL Analysis ===" << endl;
-        cout << "Avg Price: Rs." << calcAvgPrice(data, "AAPL") << endl;
-        cout << "Highest Price: Rs." << findHighestPrice(data, "AAPL") << endl;
-        cout << "Lowest Price: Rs." << findLowestPrice(data, "AAPL") << endl;
-        cout << "Total Volume: " << calcTotalVolume(data, "AAPL") << endl;
-        cout << "2-Period Moving Avg: $" << calcMovingAvg(data, "AAPL", 2) << endl;
-        
-        cout << "\n=== MSFT Analysis ===" << endl;
-        cout << "Avg Price: Rs." << calcAvgPrice(data, "MSFT") << endl;
-        cout << "Highest Price: Rs." << findHighestPrice(data, "MSFT") << endl;
-        cout << "Lowest Price: Rs." << findLowestPrice(data, "MSFT") << endl;
-        cout << "Total Volume: " << calcTotalVolume(data, "MSFT") << endl;
-        cout << "2-Period Moving Avg: $" << calcMovingAvg(data, "MSFT", 2) << endl;
+        cout<<"LOADED DATA"<<endl;
+        vector<string> symbols={"AAPL","MSFT"};
+        int shortP=2;
+        int longP=3;
+
+        for(const auto& symbol:symbols)
+        {
+            cout << "=== " << symbol << " Trading Analysis ===" << endl;
+            int signal = genTradingSignal(data, symbol, shortP, longP);
+            
+            if (signal == 1) {
+                cout << "  --> BUY SIGNAL! Short MA above Long MA || UPWARD TREND" << endl;
+            } else if (signal == -1) {
+                cout << "  --> SELL SIGNAL! Short MA below Long MA || DOWNWARD TREND" << endl;
+            } else {
+                cout << "  --> HOLD - Moving averages are equal || MEHH" << endl;
+            }
+            cout << endl;
+        }
+
         file.close();
 
     }
