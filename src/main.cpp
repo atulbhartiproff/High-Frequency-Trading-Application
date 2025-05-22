@@ -13,6 +13,43 @@ struct MarketData{
     int volume;
 };
 
+vector<MarketData> Globaldata;
+
+bool loadData(){
+    ifstream file("../src/market_data/market_data.csv");
+    string line;
+
+    if(file.is_open()){
+        getline(file,line);
+        
+        while(getline(file,line)){
+            stringstream ss(line);
+            string Time, Abb, strprice, strvolume;
+
+            getline(ss,Time,',');
+            getline(ss,Abb,',');
+            getline(ss,strprice,',');
+            getline(ss,strvolume,',');
+
+            MarketData md;
+            md.Time=Time;
+            md.Abb=Abb;
+            md.price=stod(strprice);
+            md.volume=stoi(strvolume);
+
+            Globaldata.push_back(md);
+        }
+
+        file.close();
+        return true;
+
+    }
+    else
+    {
+        cout<<"That is weird, Where da file it?";
+        return false;
+    }
+}
 
 double calcAvgPrice(const vector<MarketData>& data, const string& symbol)
 {
@@ -104,62 +141,74 @@ int genTradingSignal(const vector<MarketData>& data, const string& symbol, int s
     }
 }
 
+void showMenu() {
+    cout << "\n======= HFT Trading Platform =======" << endl;
+    cout << "1. View AAPL price data" << endl;
+    cout << "2. View MSFT price data" << endl;
+    cout << "3. Get AAPL trading signal" << endl;
+    cout << "4. Get MSFT trading signal" << endl;
+    cout << "5. Exit" << endl;
+    cout << "Choose option (1-5): ";
+}
 
+void showPriceData(const string& symbol) {
+    cout << "\n=== " << symbol << " Price Data ===" << endl;
+    for (const auto& md : Globaldata) {
+        if (md.Abb == symbol) {
+            cout << md.Time << " - $" << md.price << " (Vol: " << md.volume << ")" << endl;
+        }
+    }
+}
 
+void generateSignal(const string& symbol) {
+    double shortMA = calcMovingAvg(Globaldata,symbol, 2);
+    double longMA = calcMovingAvg(Globaldata, symbol, 3);
+    
+    cout << "\n=== " << symbol << " Trading Signal ===" << endl;
+    cout << "Short MA (2-period): $" << shortMA << endl;
+    cout << "Long MA (3-period): $" << longMA << endl;
+    
+    if (shortMA > longMA) {
+        cout << "SIGNAL: BUY" << endl;
+    } else if (shortMA < longMA) {
+        cout << "SIGNAL: SELL" << endl;
+    } else {
+        cout << "SIGNAL: HOLD" << endl;
+    }
+}
 
 int main() {
-    cout<<"Well Market Data hmmmm..."<<endl;
-    vector<MarketData> data;
-    ifstream file("../src/market_data/market_data.csv");
-    string line;
-
-    if(file.is_open()){
-        getline(file,line);
-        cout<<"COLUMNS:\n"<<line<<endl;
+    cout << "Loading market data..." << endl;
+    
+    if (!loadData()) {
+        cout << "Error: Could not load market data!" << endl;
+        return 1;
+    }
+    
+    cout << "Loaded " <<Globaldata.size() << " records successfully!" << endl;
+    while (true) {
+        showMenu();
+        int choice;
+        cin >> choice;
         
-        while(getline(file,line)){
-            stringstream ss(line);
-            string Time, Abb, strprice, strvolume;
-
-            getline(ss,Time,',');
-            getline(ss,Abb,',');
-            getline(ss,strprice,',');
-            getline(ss,strvolume,',');
-
-            MarketData md;
-            md.Time=Time;
-            md.Abb=Abb;
-            md.price=stod(strprice);
-            md.volume=stoi(strvolume);
-
-            data.push_back(md);
+        switch (choice) {
+            case 1:
+                showPriceData("AAPL");
+                break;
+            case 2:
+                showPriceData("MSFT");
+                break;
+            case 3:
+                generateSignal("AAPL");
+                break;
+            case 4:
+                generateSignal("MSFT");
+                break;
+            case 5:
+                cout << "Goodbye!" << endl;
+                return 0;
+            default:
+                cout << "Invalid choice! Please try again." << endl;
         }
-        cout<<"LOADED DATA"<<endl;
-        vector<string> symbols={"AAPL","MSFT"};
-        int shortP=2;
-        int longP=3;
-
-        for(const auto& symbol:symbols)
-        {
-            cout << "=== " << symbol << " Trading Analysis ===" << endl;
-            int signal = genTradingSignal(data, symbol, shortP, longP);
-            
-            if (signal == 1) {
-                cout << "  --> BUY SIGNAL! Short MA above Long MA || UPWARD TREND" << endl;
-            } else if (signal == -1) {
-                cout << "  --> SELL SIGNAL! Short MA below Long MA || DOWNWARD TREND" << endl;
-            } else {
-                cout << "  --> HOLD - Moving averages are equal || MEHH" << endl;
-            }
-            cout << endl;
-        }
-
-        file.close();
-
     }
-    else
-    {
-        cout<<"That is weird, Where da file it?";
-    }
-    return 0;
 }
