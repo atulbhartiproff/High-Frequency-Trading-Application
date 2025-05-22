@@ -1,6 +1,7 @@
 #include <iostream>
+using namespace std;
 
 int main() {
-    std::cout << "Trading Platform - Day 1" << std::endl;
+    cout << "Trading Platform - Does it work??????" <<endl;
     return 0;
 }
