@@ -4,6 +4,7 @@
 #include <sstream>
 #include <vector>
 #include <algorithm>
+#include "../include/MarketData.h"
 using namespace std;
 
 struct MarketData{
