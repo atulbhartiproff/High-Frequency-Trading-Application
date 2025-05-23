@@ -1,163 +1,76 @@
+#include "MarketData.h"
 #include <iostream>
 #include <fstream>
-#include <string>
 #include <sstream>
-#include <vector>
 #include <algorithm>
-#include "../include/MarketData.h"
+
 using namespace std;
 
+// Global data storage (we'll use this for now)
+vector<MarketData> globalData;
 
-vector<MarketData> Globaldata;
-
-bool loadData(){
+bool loadData(vector<MarketData>& data) {
     ifstream file("../src/market_data/market_data.csv");
     string line;
-
-    if(file.is_open()){
-        getline(file,line);
+    
+    if (file.is_open()) {
+        getline(file, line); // Skip header
         
-        while(getline(file,line)){
+        while (getline(file, line)) {
             stringstream ss(line);
-            string Time, Abb, strprice, strvolume;
-
-            getline(ss,Time,',');
-            getline(ss,Abb,',');
-            getline(ss,strprice,',');
-            getline(ss,strvolume,',');
-
+            string timestamp, symbol, price_str, volume_str;
+            
+            getline(ss, timestamp, ',');
+            getline(ss, symbol, ',');
+            getline(ss, price_str, ',');
+            getline(ss, volume_str, ',');
+            
             MarketData md;
-            md.Time=Time;
-            md.Abb=Abb;
-            md.price=stod(strprice);
-            md.volume=stoi(strvolume);
-
-            Globaldata.push_back(md);
+            md.Time = timestamp;
+            md.Abb = symbol;
+            md.price = stod(price_str);
+            md.volume = stoi(volume_str);
+            
+            data.push_back(md);
         }
-
         file.close();
+        
+        // Also populate global data for backward compatibility
+        globalData = data;
         return true;
-
     }
-    else
-    {
-        cout<<"That is weird, Where da file it?";
-        return false;
-    }
+    return false;
 }
 
-double calcAvgPrice(const vector<MarketData>& data, const string& symbol)
-{
-    double total=0.0;
-    int count=0;
-    for(const auto& md:data)
-    {
-        if(md.Abb==symbol)
-        {
-            total+=md.price;
-            count++;
-        }
-    }
-
-    return count>0?total/count:0.0;
-}
-
-double findHighestPrice(const vector<MarketData>& data, const string& symbol) {
-    double highest = 0.0;
-    
-    for (const auto& md : data) {
-        if (md.Abb == symbol && md.price > highest) {
-            highest = md.price;
-        }
-    }
-    
-    return highest;
-}
-
-double findLowestPrice(const vector<MarketData>& data, const string& symbol) {
-    double lowest = 999999; 
-    
-    for (const auto& md : data) {
-        if (md.Abb == symbol && md.price < lowest) {
-            lowest = md.price;
-        }
-    }
-    
-    return lowest == 999999.0 ? 0.0 : lowest;
-}
-
-int calcTotalVolume(const vector<MarketData>& data, const string& symbol) {
-    int totalVolume = 0;
-    for (const auto& md : data) {
-        if (md.Abb == symbol) {
-            totalVolume += md.volume;
-        }
-    }
-    return totalVolume;
-}
-
-double calcMovingAvg(const vector<MarketData>& data, const string& symbol, int periods) {
+double calculateMovingAverage(const vector<MarketData>& data, const string& symbol, int periods) {
     vector<double> prices;
-    
     for (const auto& md : data) {
         if (md.Abb == symbol) {
             prices.push_back(md.price);
         }
     }
     
-    if (prices.size() < periods) {
-        return 0.0;
-    }
+    if (prices.size() < periods) return 0.0;
     
     double sum = 0.0;
     for (int i = prices.size() - periods; i < prices.size(); i++) {
         sum += prices[i];
     }
-    
     return sum / periods;
 }
 
-int genTradingSignal(const vector<MarketData>& data, const string& symbol, int shortP, int longP)
-{
-    double shortMA=calcMovingAvg(data,symbol,shortP);
-    double longMA=calcMovingAvg(data,symbol,longP);
-
-    //Lets use MOVING AVERAGE CROSSOVER strategy for now=> 
-    //short>long= Upward trend => BUY BUY BUY
-    //short<long= Downward trend => SELL SELL SELL
-    //short=long= Nothing, just wait => HOOOOOLD
-
-    if (shortMA > longMA) {
-        return 1; // Buy signal
-    } else if (shortMA < longMA) {
-        return -1; // Sell signal
-    } else {
-        return 0; // Hold
-    }
-}
-
-void showMenu() {
-    cout << "\n======= HFT Trading Platform =======" << endl;
-    cout << "1. View AAPL price data" << endl;
-    cout << "2. View MSFT price data" << endl;
-    cout << "3. Get AAPL trading signal" << endl;
-    cout << "4. Get MSFT trading signal" << endl;
-    cout << "5. Exit" << endl;
-    cout << "Choose option (1-5): ";
-}
-
-void showPriceData(const string& symbol) {
+void showPriceData(const vector<MarketData>& data, const string& symbol) {
     cout << "\n=== " << symbol << " Price Data ===" << endl;
-    for (const auto& md : Globaldata) {
+    for (const auto& md : data) {
         if (md.Abb == symbol) {
             cout << md.Time << " - $" << md.price << " (Vol: " << md.volume << ")" << endl;
         }
     }
 }
 
-void generateSignal(const string& symbol) {
-    double shortMA = calcMovingAvg(Globaldata,symbol, 2);
-    double longMA = calcMovingAvg(Globaldata, symbol, 3);
+void generateSignal(const vector<MarketData>& data, const string& symbol) {
+    double shortMA = calculateMovingAverage(data, symbol, 2);
+    double longMA = calculateMovingAverage(data, symbol, 3);
     
     cout << "\n=== " << symbol << " Trading Signal ===" << endl;
     cout << "Short MA (2-period): $" << shortMA << endl;
@@ -170,4 +83,14 @@ void generateSignal(const string& symbol) {
     } else {
         cout << "SIGNAL: HOLD" << endl;
     }
+}
+
+void showMenu() {
+    cout << "\n======= HFT Trading Platform =======" << endl;
+    cout << "1. View AAPL price data" << endl;
+    cout << "2. View MSFT price data" << endl;
+    cout << "3. Get AAPL trading signal" << endl;
+    cout << "4. Get MSFT trading signal" << endl;
+    cout << "5. Exit" << endl;
+    cout << "Choose option (1-5): ";
 }

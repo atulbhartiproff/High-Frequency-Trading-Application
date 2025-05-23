@@ -1,0 +1,3 @@
+- Found out how to use Cmake file and make keyword
+- Apparently its wrong to use namespace std in proofessional setting as it reduces code readability and creates conflict
+- Found out About Moving Average Strat(its rudemantary but its effective)
