@@ -4,14 +4,14 @@
 using namespace std;
 
 struct MarketData {
-    string timestamp;
-    string symbol;
+    string Time;
+    string Abb;
     double price;
     int volume;
 };
 
-bool loadMarketData(vector<MarketData>& data);
+bool loadData();
 double calculateMovingAverage(const vector<MarketData>& data, const string& symbol, int periods);
-void showPriceData(const vector<MarketData>& data, const string& symbol);
-void generateSignal(const vector<MarketData>& data, const string& symbol);
+void showPriceData(const string& symbol);
+void generateSignal(const string& symbol);
 void showMenu();
