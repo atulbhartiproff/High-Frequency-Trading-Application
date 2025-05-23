@@ -5,19 +5,16 @@
 
 using namespace std;
 
-// Initialize static member
 int Order::nextOrderId = 1;
 
-// Constructor
 Order::Order(const string& symbol, OrderType type, int quantity, double price) 
     : orderId(nextOrderId++), symbol(symbol), type(type), quantity(quantity), 
       price(price), status(OrderStatus::PENDING) {
     
-    // Get current timestamp (simple version)
     time_t now = time(0);
     char* timeStr = ctime(&now);
     timestamp = string(timeStr);
-    timestamp.pop_back(); // Remove newline
+    timestamp.pop_back();
 }
 
 void Order::displayOrder() const {
