@@ -9,6 +9,7 @@
 #include "RiskManager.h"
 #include "PerformanceMonitor.h"
 #include "ExchangeManager.h"
+#include "TestRunner.cpp"
 
 int getValidChoice() {
     std::string input;
@@ -20,17 +21,17 @@ int getValidChoice() {
         try {
             choice = std::stoi(input);
             
-            if (choice >= 1 && choice <= 17) {  // Updated range for new options
+            if (choice >= 1 && choice <= 19) {
                 return choice;
             } else {
-                std::cout << "Please enter a number between 1-17: ";
+                std::cout << "Please enter a number between 1-19: ";
             }
         }
         catch (std::invalid_argument&) {
-            std::cout << "Invalid input! Please enter a number (1-17): ";
+            std::cout << "Invalid input! Please enter a number (1-19): ";
         }
         catch (std::out_of_range&) {
-            std::cout << "Number too large! Please enter a number (1-17): ";
+            std::cout << "Number too large! Please enter a number (1-19): ";
         }
     }
 }
@@ -79,7 +80,7 @@ void connectToExchange(ExchangeManager& exchangeManager) {
     
     ExchangeCredentials creds;
     creds.apiKey = apiKey;
-    creds.sandboxMode = true;  // Always start in sandbox mode for safety
+    creds.sandboxMode = true;
     
     if (exchangeManager.connectToExchange(creds)) {
         std::cout << "🎉 Ready for live trading!" << std::endl;
@@ -112,17 +113,14 @@ void placeLiveOrder(ExchangeManager& exchangeManager, RiskManager& riskManager) 
     std::cin >> price;
     std::cin.ignore();
     
-    // Create order for risk validation
     OrderType orderType = (side == "buy") ? OrderType::BUY : OrderType::SELL;
     Order testOrder(symbol, orderType, quantity, price);
     
-    // Risk check before live execution
     if (!riskManager.validateOrder(testOrder, price)) {
         std::cout << "❌ Order rejected by risk management!" << std::endl;
         return;
     }
     
-    // Final confirmation
     std::cout << "\n🚨 FINAL CONFIRMATION 🚨" << std::endl;
     std::cout << "About to place LIVE order: " << side << " " << quantity 
               << " " << symbol << " @ $" << price << std::endl;
@@ -134,7 +132,6 @@ void placeLiveOrder(ExchangeManager& exchangeManager, RiskManager& riskManager) 
     if (confirmation == "CONFIRM") {
         std::string orderId = exchangeManager.executeLiveOrder(symbol, side, quantity, price);
         if (!orderId.empty()) {
-            // Update risk manager with executed order
             testOrder.status = OrderStatus::FILLED;
             riskManager.updatePosition(testOrder);
         }
@@ -158,13 +155,13 @@ void getLiveMarketPrice(ExchangeManager& exchangeManager) {
 }
 
 int main() {
-    std::cout << "🚀 HFT Trading Platform - LIVE TRADING ENABLED" << std::endl;
+    std::cout << "🚀 HFT Trading Platform - PRODUCTION READY" << std::endl;
     std::cout << "Loading market data..." << std::endl;
     
     std::vector<MarketData> marketData;
     OrderManager orderManager;
     RiskManager riskManager(5000.0, 25000.0);
-    ExchangeManager exchangeManager;  // NEW: Exchange connectivity
+    ExchangeManager exchangeManager;
     
     if (!loadData(marketData)) {
         std::cout << "Error: Could not load market data!" << std::endl;
@@ -176,7 +173,7 @@ int main() {
     
     while (true) {
         std::cout << "\n======= HFT Trading Platform =======" << std::endl;
-        std::cout << exchangeManager.getStatus() << std::endl;  // Show connection status
+        std::cout << exchangeManager.getStatus() << std::endl;
         std::cout << "\n--- MARKET ANALYSIS ---" << std::endl;
         std::cout << "1. View AAPL price data" << std::endl;
         std::cout << "2. View MSFT price data" << std::endl;
@@ -200,8 +197,12 @@ int main() {
         std::cout << "14. Connect to exchange" << std::endl;
         std::cout << "15. View live account balance" << std::endl;
         std::cout << "16. Place LIVE order (REAL MONEY)" << std::endl;
-        std::cout << "17. Exit" << std::endl;
-        std::cout << "Choose option (1-17): ";
+        
+        std::cout << "\n--- TESTING & DEPLOYMENT ---" << std::endl;
+        std::cout << "17. 🧪 Run quick system tests" << std::endl;
+        std::cout << "18. 🧪 Run full test suite" << std::endl;
+        std::cout << "19. Exit" << std::endl;
+        std::cout << "Choose option (1-19): ";
         
         int choice = getValidChoice();
         
@@ -267,6 +268,12 @@ int main() {
                 placeLiveOrder(exchangeManager, riskManager);
                 break;
             case 17:
+                TestRunner::runQuickTests();
+                break;
+            case 18:
+                TestRunner::runAllTests();
+                break;
+            case 19:
                 std::cout << "Goodbye!" << std::endl;
                 return 0;
             default:
