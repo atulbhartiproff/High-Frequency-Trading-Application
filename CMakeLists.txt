@@ -15,6 +15,8 @@ add_executable(trading_platform
     src/Order.cpp
     src/RiskManager.cpp
     src/PerformanceMonitor.cpp
+    src/ExchangeAPI.cpp
+    src/ExchangeManager.cpp
 )
 
 # Link pthread for multi-threading
