@@ -7,6 +7,7 @@
 #include "MarketData.h"
 #include "Order.h"
 #include "RiskManager.h"
+#include "PerformanceMonitor.h"
 
 int getValidChoice() {
     std::string input;
@@ -18,17 +19,17 @@ int getValidChoice() {
         try {
             choice = std::stoi(input);
             
-            if (choice >= 1 && choice <= 10) {  
+            if (choice >= 1 && choice <= 13) {
                 return choice;
             } else {
-                std::cout << "Please enter a number between 1-10: ";
+                std::cout << "Please enter a number between 1-13: ";
             }
         }
         catch (std::invalid_argument&) {
-            std::cout << "Invalid input! Please enter a number (1-10): ";
+            std::cout << "Invalid input! Please enter a number (1-13): ";
         }
         catch (std::out_of_range&) {
-            std::cout << "Number too large! Please enter a number (1-10): ";
+            std::cout << "Number too large! Please enter a number (1-13): ";
         }
     }
 }
@@ -54,31 +55,27 @@ void placeOrderWithRiskCheck(OrderManager& orderManager, RiskManager& riskManage
     
     OrderType type = (typeChoice == 1) ? OrderType::BUY : OrderType::SELL;
     
-    // Create order for validation
     Order testOrder(symbol, type, quantity, price);
     
-    // Risk validation before placing order
     if (riskManager.validateOrder(testOrder, price)) {
         orderManager.placeOrder(symbol, type, quantity, price);
-        
-        // Simulate order fill and update position
         testOrder.status = OrderStatus::FILLED;
         riskManager.updatePosition(testOrder);
-        
-        std::cout << " Order passed risk checks and executed!" << std::endl;
+        std::cout << "✅ Order passed risk checks and executed!" << std::endl;
     } else {
-        std::cout << " Order rejected due to risk limits!" << std::endl;
+        std::cout << "❌ Order rejected due to risk limits!" << std::endl;
     }
     
-    std::cin.ignore(); 
+    std::cin.ignore();
 }
 
 int main() {
+    std::cout << "🚀 HFT Trading Platform - Multi-Core Verified" << std::endl;
     std::cout << "Loading market data..." << std::endl;
     
     std::vector<MarketData> marketData;
     OrderManager orderManager;
-    RiskManager riskManager(5000.0, 25000.0);  
+    RiskManager riskManager(5000.0, 25000.0);
     
     if (!loadData(marketData)) {
         std::cout << "Error: Could not load market data!" << std::endl;
@@ -86,7 +83,6 @@ int main() {
     }
     
     std::cout << "Loaded " << marketData.size() << " records successfully!" << std::endl;
-    
     riskManager.updateMarketPrices(marketData);
     
     while (true) {
@@ -100,8 +96,11 @@ int main() {
         std::cout << "7. View orders by symbol" << std::endl;
         std::cout << "8. View current positions & P&L" << std::endl;
         std::cout << "9. View risk exposure" << std::endl;
-        std::cout << "10. Exit" << std::endl;
-        std::cout << "Choose option (1-10): ";
+        std::cout << "10. Run basic performance benchmarks" << std::endl;
+        std::cout << "11. Run advanced HFT optimizations" << std::endl;
+        std::cout << "12. 🔍 VERIFY Multi-Core Threading" << std::endl;
+        std::cout << "13. Exit" << std::endl;
+        std::cout << "Choose option (1-13): ";
         
         int choice = getValidChoice();
         
@@ -132,15 +131,29 @@ int main() {
                 break;
             }
             case 8:
-                riskManager.updateMarketPrices(marketData);  // Refresh P&L
+                riskManager.updateMarketPrices(marketData);
                 riskManager.showPositions();
                 break;
             case 9: {
                 double exposure = riskManager.getTotalExposure();
-                std::cout << "\n Total Portfolio Exposure: $" << exposure << std::endl;
+                std::cout << "\n💰 Total Portfolio Exposure: $" << exposure << std::endl;
                 break;
             }
             case 10:
+                std::cout << "\n🚀 Running Basic Performance Benchmarks..." << std::endl;
+                PerformanceMonitor::measureDataLoad();
+                PerformanceMonitor::measureSignalGeneration();
+                PerformanceMonitor::measureOrderPlacement();
+                break;
+            case 11:
+                std::cout << "\n⚡ Running Advanced HFT Optimizations..." << std::endl;
+                PerformanceMonitor::measureCPUAffinity();
+                PerformanceMonitor::measureCacheOptimization();
+                break;
+            case 12:
+                PerformanceMonitor::verifyMultiThreading();
+                break;
+            case 13:
                 std::cout << "Goodbye!" << std::endl;
                 return 0;
             default:
